@@ -1,8 +1,14 @@
-# rate
-rate_ros: 300.0
+# mujoco simulation step rate [hz]
+rate_sim: 1000.0
 
-# str
-str_prefix: "HexHello! You said:"
+# robot state publish rate [hz]
+rate_state: 500.0
 
-# int
-int_range: [0, 1000]
+# run mujoco without the interactive viewer
+headless: false
+
+# absolute path to the mujoco scene; empty -> resolved from package share
+model_path: ""
+
+# frame id used in the published state header
+frame_id: "base_link"

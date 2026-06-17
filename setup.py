@@ -35,11 +35,11 @@ setup(
     zip_safe=True,
     maintainer='Dong Zhaorui',
     maintainer_email='dzr159@gmail.com',
-    description='A template for writing python ROS packages',
+    description='MuJoCo simulation of the Archer Y6 manipulator for ROS',
     license='Apache-2.0',
     entry_points={
         'console_scripts': [
-            'py_template = hex_ros_sim_archer_y6.py_template:main',
+            'sim_archer_y6 = hex_ros_sim_archer_y6.sim_archer_y6:main',
         ],
     },
 )

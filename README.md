@@ -2,11 +2,15 @@
 
 ## What does this package do
 
-This package demonstrates a structure of writing a python ROS package that can be used in **both ROS 1 and ROS 2**. 
+This package provides a **MuJoCo simulation** of the Archer Y6 manipulator (6-DoF arm + gp100 gripper) that runs as a python ROS node usable in **both ROS 1 and ROS 2**.
 
-It will wait for input, for string input, it will add a prefix to the input string and publish it to the `/out_str` topic. For int32 input, it will check if the input is within the specified range and publish it to the `/out_int` topic.
+The node:
 
-To use the demo, run a launch file in the `launch` directory, and publish to the `/in_str` and `/in_int` topics.
+* Steps a MuJoCo physics model at a configurable simulation rate and publishes the simulated time on `/clock`, so that other nodes can run with `use_sim_time`.
+* Publishes the robot state (`HexRosRoboManipStateStamped`) at a configurable state rate.
+* Subscribes to control commands (`HexRosRoboManipCtrlStamped`) and, on every simulation step, applies the **latest** received command.
+
+Internally the ROS interface converts between the `hex_ros_msgs` ROS messages and the `hex_util_msg` dataclasses (`HexDcRoboManipStateStamped` / `HexDcRoboManipCtrlStamped`); the simulator is fully ROS-agnostic and only deals with those dataclasses.
 
 ## Maintainer
 
@@ -32,24 +36,28 @@ Ensure the following software and hardware are installed:
 
 ### Published Topics
 
-| Topic      | Msg Type                | Description                      |
-| ---------- | ----------------------- | -------------------------------- |
-| `/out_str` | `std_msgs/(msg/)String` | Example of a string publication. |
-| `/out_int` | `std_msgs/(msg/)Int32`  | Example of an int32 publication. |
+| Topic          | Msg Type                              | Description                              |
+| -------------- | ------------------------------------- | ---------------------------------------- |
+| `/clock`       | `rosgraph_msgs/(msg/)Clock`           | Simulation time for `use_sim_time`.      |
+| `/manip_state` | `hex_ros_msgs/(msg/)HexRosRoboManipStateStamped` | Simulated arm + gripper state. |
 
 ### Subscribed Topics
 
-| Topic     | Msg Type                | Description                       |
-| --------- | ----------------------- | --------------------------------- |
-| `/in_str` | `std_msgs/(msg/)String` | Example of a string subscription. |
-| `/in_int` | `std_msgs/(msg/)Int32`  | Example of an int32 subscription. |
+| Topic         | Msg Type                                        | Description              |
+| ------------- | ----------------------------------------------- | ------------------------ |
+| `/manip_ctrl` | `hex_ros_msgs/(msg/)HexRosRoboManipCtrlStamped` | Arm + gripper command.   |
 
 ### Parameters
 
-| Name        | Data Type     | Description                   |
-| ----------- | ------------- | ----------------------------- |
-| `str_name`  | `string`      | Prefix for the output string. |
-| `int_range` | `vector<int>` | Range for the output int.     |
+| Name         | Data Type | Default        | Description                                                  |
+| ------------ | --------- | -------------- | ----------------------------------------------------------- |
+| `rate_sim`   | `double`  | `1000.0`       | MuJoCo simulation step rate [hz] (sets the model timestep). |
+| `rate_state` | `double`  | `500.0`        | Robot state publish rate [hz].                              |
+| `headless`   | `bool`    | `false`        | Run MuJoCo without the interactive viewer.                  |
+| `model_path` | `string`  | `""`           | MuJoCo scene path; empty -> resolved from the package share. |
+| `frame_id`   | `string`  | `"base_link"`  | Frame id used in the published state header.                |
+
+`rate_sim` and `rate_state` are also exposed as launch arguments.
 
 ## Getting Started
 
@@ -107,19 +115,20 @@ Follow these steps to set up the project for development and testing on your loc
 
 ### Usage
 
-1. Launch the `py_template` node:
+1. Launch the `sim_archer_y6` node:
 
    For ROS 1:
 
    ```shell
-   roslaunch hex_ros_sim_archer_y6 py_template.launch
+   roslaunch hex_ros_sim_archer_y6 sim_archer_y6.launch rate_sim:=1000.0 rate_state:=500.0
    ```
 
    For ROS 2:
 
    ```shell
-   ros2 launch hex_ros_sim_archer_y6 py_template.launch.py
+   ros2 launch hex_ros_sim_archer_y6 sim_archer_y6.launch.py rate_sim:=1000.0 rate_state:=500.0
    ```
 
-2. Publish to `/in_str` and `/in_int` topics.
-3. View the output on the `/out_str` and `/out_int` topics.
+2. Subscribe to `/manip_state` to read the simulated robot state.
+3. Publish `HexRosRoboManipCtrlStamped` to `/manip_ctrl` to control the robot.
+4. Start any downstream node with `use_sim_time` enabled so it follows the `/clock` published by the simulation.

@@ -6,14 +6,41 @@
 # Date  : 2024-09-05
 ################################################################
 
-import rclpy
-import rclpy.node
+import time
 import threading
 
-from std_msgs.msg import String
-from std_msgs.msg import Int32
+import numpy as np
+import rclpy
+import rclpy.node
+
+from builtin_interfaces.msg import Time
+from sensor_msgs.msg import JointState
+from rosgraph_msgs.msg import Clock
+from hex_ros_msgs.msg import (
+    HexRosRoboManipStateStamped,
+    HexRosRoboManipCtrlStamped,
+)
+
+from hex_util_msg.dataclass.dataclass_base import (
+    HexDcBaseHeader,
+    HexDcBaseTime,
+    HexDcBaseVector3,
+    HexDcBaseQuaternion,
+    HexDcBasePose,
+    HexDcBaseJntFull,
+)
+from hex_util_msg.dataclass.dataclass_robo import (
+    HexDcRoboArmCtrl,
+    HexDcRoboArmCtrlMode,
+    HexDcRoboGripCtrl,
+    HexDcRoboGripCtrlMode,
+    HexDcRoboManipCtrl,
+    HexDcRoboManipCtrlStamped,
+    HexDcRoboManipStateStamped,
+)
 
 from .interface_base import InterfaceBase
+from .interface_base import JOINT_STATE_NAME
 
 
 class DataInterface(InterfaceBase):
@@ -25,50 +52,56 @@ class DataInterface(InterfaceBase):
         rclpy.init()
         self.__node = rclpy.node.Node(name)
         self.__logger = self.__node.get_logger()
-        self.__node.declare_parameter('rate_ros', 300.0)
+        self.__node.declare_parameter('rate_ros', 1000.0)
         self._rate_param["ros"] = self.__node.get_parameter('rate_ros').value
         self.__rate = self.__node.create_rate(self._rate_param["ros"])
 
-        ### pamameter
-        # declare parameters
-        self.__node.declare_parameter('str_prefix', "")
-        self.__node.declare_parameter('int_range', [-1_000_000, 1_000_000])
-        # str
-        self._str_param = {
-            "prefix": self.__node.get_parameter('str_prefix').value,
+        ### parameters
+        self.__node.declare_parameter('rate_state', 500.0)
+        self.__node.declare_parameter('model_urdf', "")
+        self.__node.declare_parameter('model_mjcf', "")
+        self.__node.declare_parameter('model_frame_id', "base_link")
+        self.__node.declare_parameter('prog_viewer', True)
+        self.__node.declare_parameter('prog_rviz', True)
+        self._rate_param.update({
+            "state":
+            self.__node.get_parameter('rate_state').value,
+        })
+        self._model_param = {
+            "urdf": self.__node.get_parameter('model_urdf').value,
+            "mjcf": self.__node.get_parameter('model_mjcf').value,
+            "frame_id": self.__node.get_parameter('model_frame_id').value,
         }
-        # int
-        self._int_param = {
-            "range": self.__node.get_parameter('int_range').value,
+        self._prog_param = {
+            "viewer": self.__node.get_parameter('prog_viewer').value,
+            "rviz": self.__node.get_parameter('prog_rviz').value,
         }
 
         ### publisher
-        self.__out_str_pub = self.__node.create_publisher(
-            String,
-            'out_str',
+        self.__manip_state_pub = self.__node.create_publisher(
+            HexRosRoboManipStateStamped,
+            'manip_state',
             10,
         )
-        self.__out_int_pub = self.__node.create_publisher(
-            Int32,
-            'out_int',
+        self.__joint_state_pub = self.__node.create_publisher(
+            JointState,
+            'joint_states',
+            10,
+        )
+        self.__clock_pub = self.__node.create_publisher(
+            Clock,
+            '/clock',
             10,
         )
 
         ### subscriber
-        self.__in_str_sub = self.__node.create_subscription(
-            String,
-            'in_str',
-            self.__in_str_callback,
+        self.__manip_ctrl_sub = self.__node.create_subscription(
+            HexRosRoboManipCtrlStamped,
+            'manip_ctrl',
+            self.__manip_ctrl_callback,
             10,
         )
-        self.__in_int_sub = self.__node.create_subscription(
-            Int32,
-            'in_int',
-            self.__in_int_callback,
-            10,
-        )
-        self.__in_str_sub
-        self.__in_int_sub
+        self.__manip_ctrl_sub
 
         ### spin thread
         self.__shutting_down = False
@@ -104,6 +137,9 @@ class DataInterface(InterfaceBase):
     def sleep(self):
         self.__rate.sleep()
 
+    ####################
+    ### logging
+    ####################
     def logd(self, msg, *args, **kwargs):
         self.__logger.debug(msg, *args, **kwargs)
 
@@ -119,18 +155,140 @@ class DataInterface(InterfaceBase):
     def logf(self, msg, *args, **kwargs):
         self.__logger.fatal(msg, *args, **kwargs)
 
-    def pub_out_str(self, out: str):
-        msg = String()
-        msg.data = out
-        self.__out_str_pub.publish(msg)
+    ####################
+    ### publishers
+    ####################
+    def pub_manip_state(self, out: HexDcRoboManipStateStamped):
+        msg = HexRosRoboManipStateStamped()
+        msg.header.stamp = Time(
+            sec=int(out.header.stamp.secs),
+            nanosec=int(out.header.stamp.nsecs),
+        )
+        msg.header.frame_id = out.header.frame_id
 
-    def pub_out_int(self, out: int):
-        msg = Int32()
-        msg.data = out
-        self.__out_int_pub.publish(msg)
+        arm = out.manip_state.arm_state
+        msg.manip_state.arm_state.jnt.position = \
+            np.asarray(arm.jnt.position, dtype=np.float64).tolist()
+        msg.manip_state.arm_state.jnt.velocity = \
+            np.asarray(arm.jnt.velocity, dtype=np.float64).tolist()
+        msg.manip_state.arm_state.jnt.effort = \
+            np.asarray(arm.jnt.effort, dtype=np.float64).tolist()
+        msg.manip_state.arm_state.pose.position.x = arm.pose.position.x
+        msg.manip_state.arm_state.pose.position.y = arm.pose.position.y
+        msg.manip_state.arm_state.pose.position.z = arm.pose.position.z
+        msg.manip_state.arm_state.pose.orientation.x = arm.pose.orientation.x
+        msg.manip_state.arm_state.pose.orientation.y = arm.pose.orientation.y
+        msg.manip_state.arm_state.pose.orientation.z = arm.pose.orientation.z
+        msg.manip_state.arm_state.pose.orientation.w = arm.pose.orientation.w
 
-    def __in_str_callback(self, msg: String):
-        self._in_str_deque.append(msg.data)
+        grip = out.manip_state.grip_state
+        msg.manip_state.grip_state.jnt.position = \
+            np.asarray(grip.jnt.position, dtype=np.float64).tolist()
+        msg.manip_state.grip_state.jnt.velocity = \
+            np.asarray(grip.jnt.velocity, dtype=np.float64).tolist()
+        msg.manip_state.grip_state.jnt.effort = \
+            np.asarray(grip.jnt.effort, dtype=np.float64).tolist()
 
-    def __in_int_callback(self, msg: Int32):
-        self._in_int_deque.append(msg.data)
+        self.__manip_state_pub.publish(msg)
+
+    def pub_joint_state(self, out: HexDcRoboManipStateStamped):
+        msg = JointState()
+        msg.header.stamp = Time(
+            sec=int(out.header.stamp.secs),
+            nanosec=int(out.header.stamp.nsecs),
+        )
+        msg.header.frame_id = out.header.frame_id
+        msg.name = JOINT_STATE_NAME
+        msg.position = np.concatenate([
+            np.asarray(out.manip_state.arm_state.jnt.position, dtype=np.float64),
+            np.asarray(out.manip_state.grip_state.jnt.position, dtype=np.float64),
+        ]).tolist()
+        msg.velocity = np.concatenate([
+            np.asarray(out.manip_state.arm_state.jnt.velocity, dtype=np.float64),
+            np.asarray(out.manip_state.grip_state.jnt.velocity, dtype=np.float64),
+        ]).tolist()
+        msg.effort = np.concatenate([
+            np.asarray(out.manip_state.arm_state.jnt.effort, dtype=np.float64),
+            np.asarray(out.manip_state.grip_state.jnt.effort, dtype=np.float64),
+        ]).tolist()
+        self.__joint_state_pub.publish(msg)
+
+    def pub_clock(self, stamp_ns: int):
+        msg = Clock()
+        msg.clock = Time(
+            sec=int(stamp_ns // 1_000_000_000),
+            nanosec=int(stamp_ns % 1_000_000_000),
+        )
+        self.__clock_pub.publish(msg)
+
+    ####################
+    ### subscribers
+    ####################
+    def __manip_ctrl_callback(self, msg: HexRosRoboManipCtrlStamped):
+        self._manip_ctrl_deque.append(self.__manip_ctrl_msg_to_dc(msg))
+
+    @staticmethod
+    def __jnt_to_dc(jnt) -> HexDcBaseJntFull:
+        return HexDcBaseJntFull(
+            pos=np.asarray(jnt.pos, dtype=np.float64),
+            vel=np.asarray(jnt.vel, dtype=np.float64),
+            eff=np.asarray(jnt.eff, dtype=np.float64),
+            kp=np.asarray(jnt.kp, dtype=np.float64),
+            kd=np.asarray(jnt.kd, dtype=np.float64),
+            lim_vel=np.asarray(jnt.lim_vel, dtype=np.float64),
+            lim_acc=np.asarray(jnt.lim_acc, dtype=np.float64),
+        )
+
+    @staticmethod
+    def __pose_to_dc(pose) -> HexDcBasePose:
+        return HexDcBasePose(
+            position=HexDcBaseVector3(
+                x=pose.position.x,
+                y=pose.position.y,
+                z=pose.position.z,
+            ),
+            orientation=HexDcBaseQuaternion(
+                x=pose.orientation.x,
+                y=pose.orientation.y,
+                z=pose.orientation.z,
+                w=pose.orientation.w,
+            ),
+        )
+
+    def __manip_ctrl_msg_to_dc(
+        self,
+        msg: HexRosRoboManipCtrlStamped,
+    ) -> HexDcRoboManipCtrlStamped:
+        header = HexDcBaseHeader(
+            stamp=HexDcBaseTime(
+                secs=int(msg.header.stamp.sec),
+                nsecs=int(msg.header.stamp.nanosec),
+            ),
+            frame_id=msg.header.frame_id,
+        )
+
+        arm_msg = msg.manip_ctrl.arm_ctrl
+        arm_ctrl = HexDcRoboArmCtrl(
+            ctrl_mode=HexDcRoboArmCtrlMode(int(arm_msg.ctrl_mode)),
+            grav=HexDcBaseVector3(
+                x=arm_msg.grav.x,
+                y=arm_msg.grav.y,
+                z=arm_msg.grav.z,
+            ),
+            jnt=self.__jnt_to_dc(arm_msg.jnt),
+            pose=self.__pose_to_dc(arm_msg.pose),
+        )
+
+        grip_msg = msg.manip_ctrl.grip_ctrl
+        grip_ctrl = HexDcRoboGripCtrl(
+            ctrl_mode=HexDcRoboGripCtrlMode(int(grip_msg.ctrl_mode)),
+            jnt=self.__jnt_to_dc(grip_msg.jnt),
+        )
+
+        return HexDcRoboManipCtrlStamped(
+            header=header,
+            manip_ctrl=HexDcRoboManipCtrl(
+                arm_ctrl=arm_ctrl,
+                grip_ctrl=grip_ctrl,
+            ),
+        )

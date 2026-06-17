@@ -1,10 +1,16 @@
-py_template:
+sim_archer_y6:
   ros__parameters:
-    # rate
-    rate_ros: 300.0
+    # mujoco simulation step rate [hz]
+    rate_ros: 1000.0
 
-    # str
-    str_prefix: "HexHello! You said:"
+    # robot state publish rate [hz]
+    rate_state: 500.0
 
-    # int
-    int_range: [0, 1000]
+    # frame id used in the published state header
+    model_urdf: ""
+    model_mjcf: ""
+    model_frame_id: "base_link"
+
+    # publish joint states
+    prog_viewer: true
+    prog_rviz: true

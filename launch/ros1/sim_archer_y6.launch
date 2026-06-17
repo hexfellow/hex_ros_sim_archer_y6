@@ -1,0 +1,24 @@
+<!--#######################################-->
+<!-- Copyright (c) 2024  Dong Zhaorui.     -->
+<!-- All rights reserved.                  -->
+<!-- Author: Dong Zhaorui 847235539@qq.com -->
+<!-- Date  : 2024-09-17                    -->
+<!--#######################################-->
+
+<launch>
+    <arg name="rate_sim" default="1000.0"/>
+    <arg name="rate_state" default="500.0"/>
+    <arg name="headless" default="false"/>
+
+    <node name="sim_archer_y6" pkg="hex_ros_sim_archer_y6" type="sim_archer_y6.py" output="screen">
+        # parameter
+        <rosparam file="$(find hex_ros_sim_archer_y6)/config/ros1/params.yaml"/>
+        <param name="rate_sim" value="$(arg rate_sim)"/>
+        <param name="rate_state" value="$(arg rate_state)"/>
+        <param name="headless" value="$(arg headless)"/>
+        # subscribe
+        <remap from="manip_ctrl" to="manip_ctrl"/>
+        # publish
+        <remap from="manip_state" to="manip_state"/>
+    </node>
+</launch>

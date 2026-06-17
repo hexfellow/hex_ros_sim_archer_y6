@@ -15,12 +15,16 @@ from hex_util_msg.dataclass.dataclass_robo import (
     HexDcRoboManipStateStamped,
 )
 
+JOINT_STATE_NAME = [f"joint_{i}" for i in range(1, 7)] + ["gp100_joint_1"]
+
 
 class InterfaceBase(ABC):
 
     def __init__(self, name: str = "unknown"):
         ### ros parameters
-        self._param = {}
+        self._rate_param = {}
+        self._model_param = {}
+        self._prog_param = {}
 
         ### rx msg queues
         self._manip_ctrl_deque = deque(maxlen=100)
@@ -73,8 +77,14 @@ class InterfaceBase(ABC):
     ####################
     ### parameters
     ####################
-    def get_param(self) -> dict:
-        return self._param
+    def get_rate_param(self) -> dict:
+        return self._rate_param
+
+    def get_model_param(self) -> dict:
+        return self._model_param
+
+    def get_prog_param(self) -> dict:
+        return self._prog_param
 
     ####################
     ### publishers
@@ -82,6 +92,10 @@ class InterfaceBase(ABC):
     @abstractmethod
     def pub_manip_state(self, out: HexDcRoboManipStateStamped):
         raise NotImplementedError("InterfaceBase.pub_manip_state")
+
+    @abstractmethod
+    def pub_joint_state(self, out: HexDcRoboManipStateStamped):
+        raise NotImplementedError("InterfaceBase.pub_joint_state")
 
     @abstractmethod
     def pub_clock(self, stamp_ns: int):
