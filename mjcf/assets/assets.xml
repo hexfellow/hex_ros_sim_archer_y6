@@ -1,0 +1,11 @@
+<mujocoinclude>
+    <mesh name="base_link" file="base_link.STL"/>
+    <mesh name="link_1" file="link_1.STL"/>
+    <mesh name="link_2" file="link_2.STL"/>
+    <mesh name="link_3" file="link_3.STL"/>
+    <mesh name="link_4" file="link_4.STL"/>
+    <mesh name="link_5" file="link_5.STL"/>
+    <mesh name="grip_base_link" file="grip_base_link.STL"/>
+    <mesh name="grip_link_1" file="grip_link_1.STL"/>
+    <mesh name="grip_link_2" file="grip_link_2.STL"/>
+</mujocoinclude>
