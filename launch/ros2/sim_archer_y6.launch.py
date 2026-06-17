@@ -32,6 +32,11 @@ def generate_launch_description():
                                      default_value='true',
                                      choices=['true', 'false'],
                                      description='Flag to turn on rviz')
+    test_arg = DeclareLaunchArgument(
+        name='test',
+        default_value='false',
+        choices=['true', 'false'],
+        description='Flag to turn on test ctrl node')
 
     # sim node
     sim_param_path = PathJoinSubstitution(
@@ -90,9 +95,34 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
+    # test group
+    test_group = GroupAction(
+        [
+            Node(
+                package='hex_ros_sim_archer_y6',
+                executable='test_ctrl',
+                name='test_ctrl',
+                output="screen",
+                emulate_tty=True,
+                parameters=[{
+                    'use_sim_time': True,
+                    'arm_mode': 1,
+                    'grip_mode': 1,
+                    'frequency': 10.0,
+                }],
+                remappings=[
+                    ('manip_ctrl', 'manip_ctrl'),
+                ],
+            )
+        ],
+        condition=IfCondition(LaunchConfiguration('test')),
+    )
+
     return LaunchDescription([
         viewer_arg,
         rviz_arg,
+        test_arg,
         sim_node,
         rviz_group,
+        test_group,
     ])

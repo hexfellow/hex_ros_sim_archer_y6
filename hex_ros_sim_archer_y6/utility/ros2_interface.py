@@ -200,16 +200,21 @@ class DataInterface(InterfaceBase):
         msg.header.frame_id = out.header.frame_id
         msg.name = JOINT_STATE_NAME
         msg.position = np.concatenate([
-            np.asarray(out.manip_state.arm_state.jnt.position, dtype=np.float64),
-            np.asarray(out.manip_state.grip_state.jnt.position, dtype=np.float64),
+            np.asarray(out.manip_state.arm_state.jnt.position,
+                       dtype=np.float64),
+            np.asarray(out.manip_state.grip_state.jnt.position,
+                       dtype=np.float64),
         ]).tolist()
         msg.velocity = np.concatenate([
-            np.asarray(out.manip_state.arm_state.jnt.velocity, dtype=np.float64),
-            np.asarray(out.manip_state.grip_state.jnt.velocity, dtype=np.float64),
+            np.asarray(out.manip_state.arm_state.jnt.velocity,
+                       dtype=np.float64),
+            np.asarray(out.manip_state.grip_state.jnt.velocity,
+                       dtype=np.float64),
         ]).tolist()
         msg.effort = np.concatenate([
             np.asarray(out.manip_state.arm_state.jnt.effort, dtype=np.float64),
-            np.asarray(out.manip_state.grip_state.jnt.effort, dtype=np.float64),
+            np.asarray(out.manip_state.grip_state.jnt.effort,
+                       dtype=np.float64),
         ]).tolist()
         self.__joint_state_pub.publish(msg)
 

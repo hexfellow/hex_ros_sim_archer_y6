@@ -40,6 +40,7 @@ setup(
     entry_points={
         'console_scripts': [
             'sim_archer_y6 = hex_ros_sim_archer_y6.sim_archer_y6:main',
+            'test_ctrl = hex_ros_sim_archer_y6.test_ctrl:main',
         ],
     },
 )
