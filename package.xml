@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>hex_ros_py_template</name>
+  <name>hex_ros_sim_archer_y6</name>
   <version>0.0.0</version>
-  <description>The hex_ros_py_template package</description>
+  <description>The hex_ros_sim_archer_y6 package</description>
   <maintainer email="dzr159@gmail.com">Dong Zhaorui</maintainer>
   <license>Apache-2.0</license>
 

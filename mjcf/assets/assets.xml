@@ -5,7 +5,7 @@
     <mesh name="link_3" file="link_3.STL"/>
     <mesh name="link_4" file="link_4.STL"/>
     <mesh name="link_5" file="link_5.STL"/>
-    <mesh name="grip_base_link" file="grip_base_link.STL"/>
-    <mesh name="grip_link_1" file="grip_link_1.STL"/>
-    <mesh name="grip_link_2" file="grip_link_2.STL"/>
+    <mesh name="gp100_base_link" file="gp100_base_link.STL"/>
+    <mesh name="gp100_link_1" file="gp100_link_1.STL"/>
+    <mesh name="gp100_link_2" file="gp100_link_2.STL"/>
 </mujocoinclude>

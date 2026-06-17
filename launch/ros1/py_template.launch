@@ -6,9 +6,9 @@
 <!--#######################################-->
 
 <launch> 
-    <node name="py_template" pkg="hex_ros_py_template" type="py_template.py" output="screen" >
+    <node name="py_template" pkg="hex_ros_sim_archer_y6" type="py_template.py" output="screen" >
         # parameter
-        <rosparam file="$(find hex_ros_py_template)/config/ros1/params.yaml"/>
+        <rosparam file="$(find hex_ros_sim_archer_y6)/config/ros1/params.yaml"/>
         # subscribe
         <remap from="/in_str" to="/in_str" />
         <remap from="/in_int" to="/in_int" />

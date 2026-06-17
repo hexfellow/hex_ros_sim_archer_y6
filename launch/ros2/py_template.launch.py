@@ -13,9 +13,9 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     # py_template
-    template_param_path = FindPackageShare('hex_ros_py_template').find(
-        'hex_ros_py_template') + '/config/ros2/params.yaml'
-    template_node = Node(package='hex_ros_py_template',
+    template_param_path = FindPackageShare('hex_ros_sim_archer_y6').find(
+        'hex_ros_sim_archer_y6') + '/config/ros2/params.yaml'
+    template_node = Node(package='hex_ros_sim_archer_y6',
                          executable='py_template',
                          name='py_template',
                          output="screen",

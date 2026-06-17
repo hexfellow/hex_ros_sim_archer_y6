@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 from glob import glob
 
-package_name = 'hex_ros_py_template'
+package_name = 'hex_ros_sim_archer_y6'
 
 
 def get_files(tar: str, src: str):
@@ -39,7 +39,7 @@ setup(
     license='Apache-2.0',
     entry_points={
         'console_scripts': [
-            'py_template = hex_ros_py_template.py_template:main',
+            'py_template = hex_ros_sim_archer_y6.py_template:main',
         ],
     },
 )
