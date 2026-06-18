@@ -57,6 +57,13 @@ class DataInterface(InterfaceBase):
         self._rate_param["ros"] = self.__node.get_parameter('rate_ros').value
         self.__rate = self.__node.create_rate(self._rate_param["ros"])
 
+        ### parameters
+        self.__node.declare_parameter('rate_ctrl', 500.0)
+        self._rate_param.update({
+            "ctrl":
+            self.__node.get_parameter('rate_ctrl').value,
+        })
+
         ### publisher
         self.__manip_ctrl_pub = self.__node.create_publisher(
             HexRosRoboManipCtrlStamped,
@@ -209,7 +216,7 @@ class DataInterface(InterfaceBase):
 
     @staticmethod
     def __manip_state_msg_to_dc(
-        msg: HexRosRoboManipStateStamped, ) -> HexDcRoboManipStateStamped:
+            msg: HexRosRoboManipStateStamped) -> HexDcRoboManipStateStamped:
         header = HexDcBaseHeader(
             stamp=HexDcBaseTime(
                 secs=int(msg.header.stamp.sec),

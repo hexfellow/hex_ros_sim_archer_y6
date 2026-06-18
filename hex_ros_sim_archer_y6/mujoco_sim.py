@@ -76,7 +76,7 @@ class MujocoSim:
         # comp
         self.__dyn_util = HexDynUtilY6(
             model_path=self.__model_urdf,
-            last_link="gp100_base_link",
+            last_link="link_6",
             pose_end_in_flange=np.array([0.187, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]),
         )
 

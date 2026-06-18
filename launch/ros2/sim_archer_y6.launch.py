@@ -43,7 +43,7 @@ def generate_launch_description():
         [sim_pkg_path, "config", "ros2", "params.yaml"])
     sim_mjcf_path = PathJoinSubstitution([sim_pkg_path, "mjcf", "scene.xml"])
     urdf_file_path = PathJoinSubstitution(
-        [urdf_pkg_path, "urdf", "gp100_comp.urdf"])
+        [urdf_pkg_path, "urdf", "gr100_comp.urdf"])
     sim_node = Node(
         package='hex_ros_sim_archer_y6',
         executable='sim_archer_y6',
@@ -70,7 +70,7 @@ def generate_launch_description():
     rviz_config_path = PathJoinSubstitution(
         [sim_pkg_path, "config", "ros2", "display.rviz"])
     visual_urdf_path = PathJoinSubstitution(
-        [urdf_pkg_path, "urdf", "gp100_full.urdf"])
+        [urdf_pkg_path, "urdf", "gr100_full.urdf"])
     description_content = ParameterValue(Command(['xacro ', visual_urdf_path]),
                                          value_type=str)
     rviz_group = GroupAction(

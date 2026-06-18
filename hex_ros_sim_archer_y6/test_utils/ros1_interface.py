@@ -10,6 +10,7 @@ import numpy as np
 import rospy
 
 from geometry_msgs.msg import Point, Pose, Quaternion, Vector3
+from sensor_msgs.msg import JointState
 from hex_ros_msgs.msg import (
     HexRosJnt,
     HexRosRoboArmCtrl,
@@ -47,10 +48,13 @@ class DataInterface(InterfaceBase):
 
         ### ros node
         rospy.init_node(name, anonymous=True)
+        self._rate_param["ros"] = rospy.get_param('~rate_ros', 300.0)
+        self.__rate = rospy.Rate(self._rate_param["ros"])
 
         ### parameters
-        self._rate_param["ros"] = rospy.get_param('~rate_ros', 10.0)
-        self.__rate = rospy.Rate(max(float(self._rate_param["ros"]), 1.0))
+        self._rate_param.update({
+            "ctrl": rospy.get_param('~rate_ctrl', 10.0),
+        })
 
         ### publisher
         self.__manip_ctrl_pub = rospy.Publisher(
@@ -121,11 +125,12 @@ class DataInterface(InterfaceBase):
             lim_acc=np.asarray(jnt.lim_acc, dtype=np.float64).tolist(),
         )
 
-    def __arm_ctrl_to_msg(self, arm: HexDcRoboArmCtrl) -> HexRosRoboArmCtrl:
+    @staticmethod
+    def __arm_ctrl_to_msg(arm: HexDcRoboArmCtrl) -> HexRosRoboArmCtrl:
         return HexRosRoboArmCtrl(
             ctrl_mode=int(arm.ctrl_mode),
             grav=Vector3(x=arm.grav.x, y=arm.grav.y, z=arm.grav.z),
-            jnt=self.__jnt_to_msg(arm.jnt),
+            jnt=DataInterface.__jnt_to_msg(arm.jnt),
             pose=Pose(
                 position=Point(
                     x=arm.pose.position.x,
@@ -141,10 +146,11 @@ class DataInterface(InterfaceBase):
             ),
         )
 
-    def __grip_ctrl_to_msg(self, grip: HexDcRoboGripCtrl) -> HexRosRoboGripCtrl:
+    @staticmethod
+    def __grip_ctrl_to_msg(grip: HexDcRoboGripCtrl) -> HexRosRoboGripCtrl:
         return HexRosRoboGripCtrl(
             ctrl_mode=int(grip.ctrl_mode),
-            jnt=self.__jnt_to_msg(grip.jnt),
+            jnt=DataInterface.__jnt_to_msg(grip.jnt),
         )
 
     ####################
@@ -154,7 +160,7 @@ class DataInterface(InterfaceBase):
         self._manip_state_deque.append(self.__manip_state_msg_to_dc(msg))
 
     @staticmethod
-    def __jnt_state_to_dc(jnt) -> HexDcBaseJntState:
+    def __jnt_state_to_dc(jnt: JointState) -> HexDcBaseJntState:
         return HexDcBaseJntState(
             position=np.asarray(jnt.position, dtype=np.float64),
             velocity=np.asarray(jnt.velocity, dtype=np.float64),
@@ -162,7 +168,7 @@ class DataInterface(InterfaceBase):
         )
 
     @staticmethod
-    def __pose_to_dc(pose) -> HexDcBasePose:
+    def __pose_to_dc(pose: Pose) -> HexDcBasePose:
         return HexDcBasePose(
             position=HexDcBaseVector3(
                 x=pose.position.x,
@@ -177,10 +183,9 @@ class DataInterface(InterfaceBase):
             ),
         )
 
+    @staticmethod
     def __manip_state_msg_to_dc(
-        self,
-        msg: HexRosRoboManipStateStamped,
-    ) -> HexDcRoboManipStateStamped:
+            msg: HexRosRoboManipStateStamped) -> HexDcRoboManipStateStamped:
         header = HexDcBaseHeader(
             stamp=HexDcBaseTime(
                 secs=int(msg.header.stamp.secs),
@@ -191,14 +196,13 @@ class DataInterface(InterfaceBase):
 
         arm_msg = msg.manip_state.arm_state
         arm_state = HexDcRoboArmState(
-            jnt=self.__jnt_state_to_dc(arm_msg.jnt),
-            pose=self.__pose_to_dc(arm_msg.pose),
+            jnt=DataInterface.__jnt_state_to_dc(arm_msg.jnt),
+            pose=DataInterface.__pose_to_dc(arm_msg.pose),
         )
 
         grip_msg = msg.manip_state.grip_state
-        grip_state = HexDcRoboGripState(
-            jnt=self.__jnt_state_to_dc(grip_msg.jnt),
-        )
+        grip_state = HexDcRoboGripState(jnt=DataInterface.__jnt_state_to_dc(
+            grip_msg.jnt), )
 
         return HexDcRoboManipStateStamped(
             header=header,

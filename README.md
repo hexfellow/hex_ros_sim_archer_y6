@@ -2,7 +2,7 @@
 
 ## What does this package do
 
-This package provides a **MuJoCo simulation** of the Archer Y6 manipulator (6-DoF arm + gp100 gripper) that runs as a python ROS node usable in **both ROS 1 and ROS 2**.
+This package provides a **MuJoCo simulation** of the Archer Y6 manipulator (6-DoF arm + gr100 gripper) that runs as a python ROS node usable in **both ROS 1 and ROS 2**.
 
 The node:
 

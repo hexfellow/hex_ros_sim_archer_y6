@@ -185,23 +185,30 @@ class TestCtrl:
 
         ### derived
         self.__cycle_decim = max(1, int(round(CYCLE_PERIOD * self.__freq)))
+        
+        ### derived
+        self.__ctrl_decim = max(1, int(round(self.__freq / self._rate_param["ctrl"])))
 
     def run(self):
         step = 0
+        ctrl_count = 0
         state_count = 0
         report_time = time.monotonic()
         while self.__data_interface.ok():
-            # 1. advance the preset cycle every CYCLE_PERIOD seconds
-            cycle_idx = step // self.__cycle_decim
+            ctrl_count += 1
+            if ctrl_count >= self.__ctrl_decim:
+                ctrl_count = 0
+                # 1. advance the preset cycle every CYCLE_PERIOD seconds
+                cycle_idx = step // self.__cycle_decim
 
-            # 2. build the manipulator control command
-            # manip_ctrl = none_case(cycle_idx)
-            # manip_ctrl = mit_case(cycle_idx)
-            # manip_ctrl = jnt_case(cycle_idx)
-            manip_ctrl = ee_case(cycle_idx)
+                # 2. build the manipulator control command
+                # manip_ctrl = none_case(cycle_idx)
+                # manip_ctrl = mit_case(cycle_idx)
+                manip_ctrl = jnt_case(cycle_idx)
+                # manip_ctrl = ee_case(cycle_idx)
 
-            # 3. publish the control command
-            self.__data_interface.pub_manip_ctrl(manip_ctrl)
+                # 3. publish the control command
+                self.__data_interface.pub_manip_ctrl(manip_ctrl)
 
             # 4. drain all received manip_state messages
             while self.__data_interface.get_manip_state() is not None:

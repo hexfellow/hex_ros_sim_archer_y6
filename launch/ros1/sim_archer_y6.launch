@@ -12,7 +12,7 @@
     <arg name="test" default="false"/>
 
     <!-- resolve model paths -->
-    <arg name="model_urdf" default="$(find hex_ros_urdf_archer_y6)/urdf/gp100_comp.urdf"/>
+    <arg name="model_urdf" default="$(find hex_ros_urdf_archer_y6)/urdf/gr100_comp.urdf"/>
     <arg name="model_mjcf" default="$(find hex_ros_sim_archer_y6)/mjcf/scene.xml"/>
 
     <!-- set use_sim_time globally (the simulator publishes /clock) -->
@@ -39,7 +39,7 @@
         <!-- publish TF from /joint_states using the full URDF -->
         <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
             <param name="robot_description"
-                   command="$(find xacro)/xacro $(find hex_ros_urdf_archer_y6)/urdf/gp100_full.urdf"/>
+                   command="$(find xacro)/xacro $(find hex_ros_urdf_archer_y6)/urdf/gr100_full.urdf"/>
         </node>
         <!-- launch rviz without a preset config; configure displays manually -->
         <node name="rviz" pkg="rviz" type="rviz"/>

@@ -15,7 +15,7 @@ from hex_util_msg.dataclass.dataclass_robo import (
     HexDcRoboManipStateStamped,
 )
 
-JOINT_STATE_NAME = [f"joint_{i}" for i in range(1, 7)] + ["gp100_joint_1"]
+JOINT_STATE_NAME = [f"joint_{i}" for i in range(1, 7)] + ["grip_joint_1"]
 
 
 class InterfaceBase(ABC):

@@ -35,8 +35,8 @@
     <include file="setting.xml"/>
 
     <keyframe>
-        # qpos: 7 (joint_1..joint_6, gp100_joint_1)
-        # ctrl: 7 (joint_1..joint_6, gp100_joint_1)
+        # qpos: 7 (joint_1..joint_6, grip_joint_1)
+        # ctrl: 7 (joint_1..joint_6, grip_joint_1)
         <key name="home" qpos="0.0 0.0 0.0 0.0 0.0 0.0 0.0" ctrl="0.0 0.0 0.0 0.0 0.0 0.0 0.0"/>
     </keyframe>
 </mujoco>

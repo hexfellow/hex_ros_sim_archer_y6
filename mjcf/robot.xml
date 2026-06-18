@@ -28,21 +28,21 @@
                             <joint name="joint_5" class="j5_class" pos="0 0 0" axis="-1 0 0" range="-1.55 1.55" limited="true"/>
                             <geom type="mesh" rgba="1 1 1 1" mesh="link_5"/>
 
-                            <body name="gp100_base_link" pos="0.0552 0 0.02895">
+                            <body name="link_6" pos="0.0552 0 0.02895">
                                 <inertial pos="-0.00409595 -0.000118 0.041959" quat="0.972591 0.0348923 -0.178222 -0.145212" mass="0.492497" diaginertia="0.000349023 0.000343997 0.000214501"/>
                                 <joint name="joint_6" class="j6_class" pos="0 0 0" axis="0 0 1" range="-2.96 2.96" limited="true"/>
-                                <geom type="mesh" rgba="1 1 1 1" mesh="gp100_base_link"/>
+                                <geom type="mesh" rgba="1 1 1 1" mesh="link_6"/>
 
-                                <body name="gp100_link_1" pos="0 -0.014 0.076799">
+                                <body name="grip_link_1" pos="0 -0.014 0.076799">
                                     <inertial pos="-0.00119579 -0.0251989 0.0319636" quat="0.911439 0.267238 -0.0501795 0.308779" mass="0.0243843" diaginertia="2.2227e-05 2.18381e-05 1.5749e-06"/>
-                                    <joint name="gp100_joint_1" class="jg_class" pos="0 0 0" axis="-1 0 0" range="0 0.6" limited="true"/>
-                                    <geom type="mesh" rgba="1 1 1 1" mesh="gp100_link_1"/>
+                                    <joint name="grip_joint_1" class="jg_class" pos="0 0 0" axis="-1 0 0" range="0 0.6" limited="true"/>
+                                    <geom type="mesh" rgba="1 1 1 1" mesh="grip_link_1"/>
                                 </body>
 
-                                <body name="gp100_link_2" pos="0 0.014 0.076799">
+                                <body name="grip_link_2" pos="0 0.014 0.076799">
                                     <inertial pos="-0.00119579 0.0251989 0.0319636" quat="0.911439 -0.267238 -0.0501795 -0.308779" mass="0.0243843" diaginertia="2.2227e-05 2.18381e-05 1.5749e-06"/>
-                                    <joint name="gp100_joint_2" class="jg_class" pos="0 0 0" axis="1 0 0" range="0 0.6" limited="true"/>
-                                    <geom type="mesh" rgba="1 1 1 1" mesh="gp100_link_2"/>
+                                    <joint name="grip_joint_2" class="jg_class" pos="0 0 0" axis="1 0 0" range="0 0.6" limited="true"/>
+                                    <geom type="mesh" rgba="1 1 1 1" mesh="grip_link_2"/>
                                 </body>
 
                                 <body name="ee_frame" pos="0.1870 0.0 0.0" quat="1 0 0 0">
