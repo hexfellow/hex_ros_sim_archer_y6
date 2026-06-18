@@ -11,6 +11,7 @@ import time
 import numpy as np
 import rospy
 
+from sensor_msgs.msg import JointState
 from rosgraph_msgs.msg import Clock
 from hex_ros_msgs.msg import (
     HexRosRoboManipStateStamped,
@@ -48,22 +49,33 @@ class DataInterface(InterfaceBase):
         rospy.init_node(name, anonymous=True)
 
         ### parameters
-        self._param = {
-            "rate_sim": rospy.get_param('~rate_sim', 1000.0),
-            "rate_state": rospy.get_param('~rate_state', 500.0),
-            "headless": rospy.get_param('~headless', True),
-            "model_path": rospy.get_param('~model_path', ""),
-            "frame_id": rospy.get_param('~frame_id', "base_link"),
+        self._rate_param = {
+            "ros": rospy.get_param('~rate_ros', 1000.0),
+            "state": rospy.get_param('~rate_state', 500.0),
+        }
+        self._model_param = {
+            "urdf": rospy.get_param('~model_urdf', ""),
+            "mjcf": rospy.get_param('~model_mjcf', ""),
+            "frame_id": rospy.get_param('~model_frame_id', "base_link"),
+        }
+        self._prog_param = {
+            "viewer": rospy.get_param('~prog_viewer', True),
+            "rviz": rospy.get_param('~prog_rviz', True),
         }
 
         ### loop pacing (wall clock; this node is the sim-time source)
-        self.__loop_dt = 1.0 / max(float(self._param["rate_sim"]), 1.0)
+        self.__loop_dt = 1.0 / max(float(self._rate_param["ros"]), 1.0)
         self.__next_wakeup = time.monotonic()
 
         ### publisher
         self.__manip_state_pub = rospy.Publisher(
             'manip_state',
             HexRosRoboManipStateStamped,
+            queue_size=10,
+        )
+        self.__joint_state_pub = rospy.Publisher(
+            'joint_states',
+            JointState,
             queue_size=10,
         )
         self.__clock_pub = rospy.Publisher(

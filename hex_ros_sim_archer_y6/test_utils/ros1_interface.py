@@ -49,12 +49,8 @@ class DataInterface(InterfaceBase):
         rospy.init_node(name, anonymous=True)
 
         ### parameters
-        self._test_param = {
-            "arm_mode": rospy.get_param('~arm_mode', 1),
-            "grip_mode": rospy.get_param('~grip_mode', 1),
-            "freq": rospy.get_param('~frequency', 10.0),
-        }
-        self.__rate = rospy.Rate(max(float(self._test_param["freq"]), 1.0))
+        self._rate_param["ros"] = rospy.get_param('~rate_ros', 10.0)
+        self.__rate = rospy.Rate(max(float(self._rate_param["ros"]), 1.0))
 
         ### publisher
         self.__manip_ctrl_pub = rospy.Publisher(

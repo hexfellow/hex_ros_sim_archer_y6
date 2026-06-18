@@ -6,19 +6,47 @@
 <!--#######################################-->
 
 <launch>
-    <arg name="rate_sim" default="1000.0"/>
-    <arg name="rate_state" default="500.0"/>
-    <arg name="headless" default="false"/>
+    <!-- simulation arguments -->
+    <arg name="viewer" default="true"/>
+    <arg name="rviz" default="true"/>
+    <arg name="test" default="false"/>
 
+    <!-- resolve model paths -->
+    <arg name="model_urdf" default="$(find hex_ros_urdf_archer_y6)/urdf/gp100_comp.urdf"/>
+    <arg name="model_mjcf" default="$(find hex_ros_sim_archer_y6)/mjcf/scene.xml"/>
+
+    <!-- set use_sim_time globally (the simulator publishes /clock) -->
+    <param name="/use_sim_time" value="true"/>
+
+    <!-- ==================== sim node ==================== -->
     <node name="sim_archer_y6" pkg="hex_ros_sim_archer_y6" type="sim_archer_y6.py" output="screen">
-        # parameter
+        <!-- load default parameters -->
         <rosparam file="$(find hex_ros_sim_archer_y6)/config/ros1/params.yaml"/>
-        <param name="rate_sim" value="$(arg rate_sim)"/>
-        <param name="rate_state" value="$(arg rate_state)"/>
-        <param name="headless" value="$(arg headless)"/>
-        # subscribe
+        <!-- override with launch arguments -->
+        <param name="model_urdf" value="$(arg model_urdf)"/>
+        <param name="model_mjcf" value="$(arg model_mjcf)"/>
+        <param name="prog_viewer" value="$(arg viewer)"/>
+        <param name="prog_rviz" value="$(arg rviz)"/>
+        <!-- subscribe -->
         <remap from="manip_ctrl" to="manip_ctrl"/>
-        # publish
+        <!-- publish -->
         <remap from="manip_state" to="manip_state"/>
+        <remap from="joint_states" to="joint_states"/>
     </node>
+
+    <!-- ==================== rviz group ==================== -->
+    <group if="$(arg rviz)">
+        <!-- publish TF from /joint_states using the full URDF -->
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+            <param name="robot_description"
+                   command="$(find xacro)/xacro $(find hex_ros_urdf_archer_y6)/urdf/gp100_full.urdf"/>
+        </node>
+        <!-- launch rviz without a preset config; configure displays manually -->
+        <node name="rviz" pkg="rviz" type="rviz"/>
+    </group>
+
+    <!-- ==================== test group ==================== -->
+    <group if="$(arg test)">
+        <node name="test_ctrl" pkg="hex_ros_sim_archer_y6" type="test_ctrl.py" output="screen"/>
+    </group>
 </launch>

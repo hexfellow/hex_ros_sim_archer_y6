@@ -1,14 +1,14 @@
 # mujoco simulation step rate [hz]
-rate_sim: 1000.0
+rate_ros: 1000.0
 
 # robot state publish rate [hz]
 rate_state: 500.0
 
-# run mujoco without the interactive viewer
-headless: false
-
-# absolute path to the mujoco scene; empty -> resolved from package share
-model_path: ""
-
 # frame id used in the published state header
-frame_id: "base_link"
+model_urdf: ""
+model_mjcf: ""
+model_frame_id: "base_link"
+
+# publish joint states / enable viewer
+prog_viewer: true
+prog_rviz: true

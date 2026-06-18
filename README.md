@@ -8,7 +8,10 @@ The node:
 
 * Steps a MuJoCo physics model at a configurable simulation rate and publishes the simulated time on `/clock`, so that other nodes can run with `use_sim_time`.
 * Publishes the robot state (`HexRosRoboManipStateStamped`) at a configurable state rate.
+* Optionally publishes `sensor_msgs/JointState` on `/joint_states` so that `robot_state_publisher` can compute TF transforms for RViz visualization.
 * Subscribes to control commands (`HexRosRoboManipCtrlStamped`) and, on every simulation step, applies the **latest** received command.
+
+An optional **test controller** node (`test_ctrl`) can be launched alongside the simulator. It cycles through preset arm and gripper control modes (MIT / JNT / EE) for quick validation.
 
 Internally the ROS interface converts between the `hex_ros_msgs` ROS messages and the `hex_util_msg` dataclasses (`HexDcRoboManipStateStamped` / `HexDcRoboManipCtrlStamped`); the simulator is fully ROS-agnostic and only deals with those dataclasses.
 
@@ -26,11 +29,8 @@ Ensure the following software and hardware are installed:
 ### Verified Platforms
 
 * [x] **x64**
-* [ ] **Jetson Orin Nano**
 * [x] **Jetson Orin NX**
 * [ ] **Jetson AGX Orin**
-* [ ] **Horizon RDK X5**
-* [ ] **Rockchip RK3588**
 
 ## Public APIs
 
@@ -40,6 +40,7 @@ Ensure the following software and hardware are installed:
 | -------------- | ------------------------------------- | ---------------------------------------- |
 | `/clock`       | `rosgraph_msgs/(msg/)Clock`           | Simulation time for `use_sim_time`.      |
 | `/manip_state` | `hex_ros_msgs/(msg/)HexRosRoboManipStateStamped` | Simulated arm + gripper state. |
+| `/joint_states`| `sensor_msgs/(msg/)JointState`        | Joint positions / velocities / efforts for TF & RViz. |
 
 ### Subscribed Topics
 
@@ -49,15 +50,17 @@ Ensure the following software and hardware are installed:
 
 ### Parameters
 
-| Name         | Data Type | Default        | Description                                                  |
-| ------------ | --------- | -------------- | ----------------------------------------------------------- |
-| `rate_sim`   | `double`  | `1000.0`       | MuJoCo simulation step rate [hz] (sets the model timestep). |
-| `rate_state` | `double`  | `500.0`        | Robot state publish rate [hz].                              |
-| `headless`   | `bool`    | `false`        | Run MuJoCo without the interactive viewer.                  |
-| `model_path` | `string`  | `""`           | MuJoCo scene path; empty -> resolved from the package share. |
-| `frame_id`   | `string`  | `"base_link"`  | Frame id used in the published state header.                |
+| Name              | Data Type | Default        | Description                                                  |
+| ----------------- | --------- | -------------- | ----------------------------------------------------------- |
+| `rate_ros`        | `double`  | `1000.0`       | MuJoCo simulation step rate [hz] (sets the model timestep). |
+| `rate_state`      | `double`  | `500.0`        | Robot state publish rate [hz].                              |
+| `model_urdf`      | `string`  | `""`           | URDF path for dynamics computations (e.g. `HexDynUtilY6`).  |
+| `model_mjcf`      | `string`  | `""`           | MuJoCo MJCF scene path.                                     |
+| `model_frame_id`  | `string`  | `"base_link"`  | Frame id used in the published state header.                |
+| `prog_viewer`     | `bool`    | `true`         | Enable the MuJoCo interactive viewer window.                |
+| `prog_rviz`       | `bool`    | `true`         | Publish `/joint_states` for RViz / TF visualization.        |
 
-`rate_sim` and `rate_state` are also exposed as launch arguments.
+The launch files expose `viewer`, `rviz`, and `test` as launch arguments that override `prog_viewer`, `prog_rviz`, and the test controller respectively.
 
 ## Getting Started
 
@@ -122,15 +125,24 @@ Follow these steps to set up the project for development and testing on your loc
    For ROS 1:
 
    ```shell
-   roslaunch hex_ros_sim_archer_y6 sim_archer_y6.launch rate_sim:=1000.0 rate_state:=500.0
+   # bare simulation (no viewer, no rviz)
+   roslaunch hex_ros_sim_archer_y6 sim_archer_y6.launch viewer:=false rviz:=false
+
+   # with MuJoCo viewer and RViz visualization, plus the test controller
+   roslaunch hex_ros_sim_archer_y6 sim_archer_y6.launch viewer:=true rviz:=true test:=true
    ```
 
    For ROS 2:
 
    ```shell
-   ros2 launch hex_ros_sim_archer_y6 sim_archer_y6.launch.py rate_sim:=1000.0 rate_state:=500.0
+   # bare simulation (no viewer, no rviz)
+   ros2 launch hex_ros_sim_archer_y6 sim_archer_y6.launch.py viewer:=false rviz:=false
+
+   # with MuJoCo viewer and RViz visualization, plus the test controller
+   ros2 launch hex_ros_sim_archer_y6 sim_archer_y6.launch.py viewer:=true rviz:=true test:=true
    ```
 
 2. Subscribe to `/manip_state` to read the simulated robot state.
 3. Publish `HexRosRoboManipCtrlStamped` to `/manip_ctrl` to control the robot.
-4. Start any downstream node with `use_sim_time` enabled so it follows the `/clock` published by the simulation.
+4. (Optional) Start `test_ctrl` with `test:=true` to run the preset control-mode cycle.
+5. Start any downstream node with `use_sim_time` enabled so it follows the `/clock` published by the simulation.
