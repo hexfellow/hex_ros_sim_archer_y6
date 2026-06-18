@@ -15,9 +15,6 @@
     <arg name="model_urdf" default="$(find hex_ros_urdf_archer_y6)/urdf/gr100_comp.urdf"/>
     <arg name="model_mjcf" default="$(find hex_ros_sim_archer_y6)/mjcf/scene.xml"/>
 
-    <!-- set use_sim_time globally (the simulator publishes /clock) -->
-    <param name="/use_sim_time" value="true"/>
-
     <!-- ==================== sim node ==================== -->
     <node name="sim_archer_y6" pkg="hex_ros_sim_archer_y6" type="sim_archer_y6.py" output="screen">
         <!-- load default parameters -->
@@ -40,13 +37,19 @@
         <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
             <param name="robot_description"
                    command="$(find xacro)/xacro $(find hex_ros_urdf_archer_y6)/urdf/gr100_full.urdf"/>
+            <param name="use_sim_time" value="true"/>
         </node>
-        <!-- launch rviz without a preset config; configure displays manually -->
-        <node name="rviz" pkg="rviz" type="rviz"/>
+        <!-- launch rviz with preset config -->
+        <node name="rviz" pkg="rviz" type="rviz"
+              args="-d $(find hex_ros_sim_archer_y6)/config/ros1/display.rviz">
+            <param name="use_sim_time" value="true"/>
+        </node>
     </group>
 
     <!-- ==================== test group ==================== -->
     <group if="$(arg test)">
-        <node name="test_ctrl" pkg="hex_ros_sim_archer_y6" type="test_ctrl.py" output="screen"/>
+        <node name="test_ctrl" pkg="hex_ros_sim_archer_y6" type="test_ctrl.py" output="screen">
+            <param name="use_sim_time" value="true"/>
+        </node>
     </group>
 </launch>
