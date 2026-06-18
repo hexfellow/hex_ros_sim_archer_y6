@@ -39,7 +39,7 @@ ARM_POS_EXTEND = [0.5, -1.0, 1.5, -0.5, 0.5, 0.0]
 ARM_POS_RETRACT = [-0.5, 0.5, 1.57, -0.5, 0.5, 0.0]
 ARM_POS_PRESETS = [ARM_POS_HOME, ARM_POS_EXTEND, ARM_POS_RETRACT]
 
-# end-effector pose presets for arm (EE mode) — [position], [quaternion xyzw]
+# end-effector pose presets for arm (EE mode) — [position], [quaternion wxyz]
 ARM_EE_POSE_A = ([0.3, 0.0, 0.4], [1.0, 0.0, 0.0, 0.0])
 ARM_EE_POSE_B = ([0.3, 0.2, 0.3], [1.0, 0.0, 0.0, 0.0])
 ARM_EE_PRESETS = [ARM_EE_POSE_A, ARM_EE_POSE_B]
@@ -153,7 +153,12 @@ def jnt_case(cycle_idx: int, grav: bool = True) -> HexDcRoboManipCtrl:
 def ee_case(cycle_idx: int, grav: bool = True) -> HexDcRoboManipCtrl:
     ee_arm_ctrl = copy.deepcopy(DEFAULT_ARM_CTRL)
     ee_arm_ctrl.ctrl_mode = ArmCtrlMode.EE
-    ee_arm_ctrl.pose.position = ARM_EE_PRESETS[cycle_idx % len(ARM_EE_PRESETS)]
+    pos, ori = ARM_EE_PRESETS[cycle_idx % len(ARM_EE_PRESETS)]
+    ee_arm_ctrl.pose.position = HexDcBaseVector3(x=pos[0], y=pos[1], z=pos[2])
+    ee_arm_ctrl.pose.orientation = HexDcBaseQuaternion(w=ori[0],
+                                                       x=ori[1],
+                                                       y=ori[2],
+                                                       z=ori[3])
     if grav:
         ee_arm_ctrl.grav.x = 0.0
         ee_arm_ctrl.grav.y = 0.0

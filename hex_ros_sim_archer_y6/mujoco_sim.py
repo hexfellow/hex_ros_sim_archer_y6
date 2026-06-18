@@ -290,7 +290,7 @@ class MujocoSim:
             )
             mid_pos = interp_joint(
                 cur_jnt.position,
-                ctrl_jnt.pos,
+                tar_pos,
                 # not a right formulation, just for test
                 err_limit=ctrl_jnt.lim_vel * 3e-3,
             )
@@ -300,13 +300,23 @@ class MujocoSim:
                     cur_jnt.velocity) + ctrl_jnt.eff + self.__cur_comp
 
         elif mode == HexDcRoboArmCtrlMode.EE:
+            pos = np.array([
+                ctrl_pose.position.x,
+                ctrl_pose.position.y,
+                ctrl_pose.position.z,
+            ])
+            ori = np.array([
+                ctrl_pose.orientation.w,
+                ctrl_pose.orientation.x,
+                ctrl_pose.orientation.y,
+                ctrl_pose.orientation.z,
+            ])
             ik_success, tar_pos = self.__dyn_util.inverse_kinematics_analytic(
-                (ctrl_pose.position, ctrl_pose.orientation),
+                (pos, ori),
                 cur_jnt.position,
             )
             if not ik_success:
                 print("Inverse kinematics failed")
-                return
             tar_pos = arm_pos_limit(
                 tar_pos,
                 self.__arm_limits[:, 0, 0],
@@ -314,7 +324,7 @@ class MujocoSim:
             )
             mid_pos = interp_joint(
                 cur_jnt.position,
-                ctrl_jnt.pos,
+                tar_pos,
                 # not a right formulation, just for test
                 err_limit=ctrl_jnt.lim_vel * 3e-3,
             )
@@ -356,7 +366,7 @@ class MujocoSim:
             tau_cmds = np.clip(np.fabs(pos_err * 1e1), 0.0, 1.0) * grip_tau
 
         elif mode == int(HexDcRoboGripCtrlMode.TAU):
-            kd = ctrl_jnt.eff / ctrl_jnt.lim_vel
+            kd = np.fabs(ctrl_jnt.eff / ctrl_jnt.lim_vel)
             tau_cmds = ctrl_jnt.eff - kd * cur_jnt.velocity
 
         else:
