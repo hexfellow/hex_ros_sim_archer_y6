@@ -53,7 +53,6 @@ def generate_launch_description():
         parameters=[
             sim_param_path,
             {
-                "use_sim_time": True,
                 "model_urdf": ParameterValue(urdf_file_path, value_type=str),
                 "model_mjcf": ParameterValue(sim_mjcf_path, value_type=str),
                 "prog_viewer": ParameterValue(LaunchConfiguration('viewer'), value_type=bool),
@@ -106,9 +105,6 @@ def generate_launch_description():
                 emulate_tty=True,
                 parameters=[{
                     'use_sim_time': True,
-                    'arm_mode': 1,
-                    'grip_mode': 1,
-                    'frequency': 10.0,
                 }],
                 remappings=[
                     ('manip_ctrl', 'manip_ctrl'),

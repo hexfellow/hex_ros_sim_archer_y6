@@ -77,9 +77,11 @@ Follow these steps to set up the project for development and testing on your loc
    cd catkin_ws/src
    ```
 
-3. Clone the repository:
+3. Clone necessary repositories:
 
    ```shell
+   git clone https://github.com/hexfellow/hex_ros_urdf_archer_y6.git
+   git clone https://github.com/hexfellow/hex_ros_msgs.git
    git clone https://github.com/hexfellow/hex_ros_sim_archer_y6.git
    ```
 

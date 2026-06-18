@@ -77,6 +77,7 @@ class MujocoSim:
         self.__dyn_util = HexDynUtilY6(
             model_path=self.__model_urdf,
             last_link="gp100_base_link",
+            pose_end_in_flange=np.array([0.187, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]),
         )
 
         # cur
@@ -227,7 +228,7 @@ class MujocoSim:
                 effort=self.__data.qfrc_actuator[self.__idx_dict["grip"]],
             ),
         }
-        self.__comp_grav = self.__dyn_util.compensation(
+        self.__cur_comp = self.__dyn_util.compensation(
             self.__cur_state["arm"].position,
             self.__cur_state["arm"].velocity,
         )
@@ -249,7 +250,12 @@ class MujocoSim:
         # arm ctrl
         if ctrl.manip_ctrl.arm_ctrl.ctrl_mode is not HexDcRoboArmCtrlMode.NONE:
             self.__cur_ctrl["arm"] = ctrl.manip_ctrl.arm_ctrl
-            self.__dyn_util.set_gravity(ctrl.manip_ctrl.arm_ctrl.grav)
+            gravity = np.array([
+                ctrl.manip_ctrl.arm_ctrl.grav.x,
+                ctrl.manip_ctrl.arm_ctrl.grav.y,
+                ctrl.manip_ctrl.arm_ctrl.grav.z,
+            ])
+            self.__dyn_util.set_gravity(gravity)
         if ctrl.manip_ctrl.grip_ctrl.ctrl_mode is not HexDcRoboGripCtrlMode.NONE:
             self.__cur_ctrl["grip"] = ctrl.manip_ctrl.grip_ctrl
 
@@ -273,7 +279,8 @@ class MujocoSim:
             )
             tau_cmds = ctrl_jnt.kp * (
                 tar_pos - cur_jnt.position) + ctrl_jnt.kd * (
-                    ctrl_jnt.vel - cur_jnt.velocity) + self.__cur_comp
+                    ctrl_jnt.vel -
+                    cur_jnt.velocity) + ctrl_jnt.eff + self.__cur_comp
 
         elif mode == HexDcRoboArmCtrlMode.JNT:
             tar_pos = arm_pos_limit(
@@ -282,14 +289,15 @@ class MujocoSim:
                 self.__arm_limits[:, 0, 1],
             )
             mid_pos = interp_joint(
-                ctrl_jnt.pos,
                 cur_jnt.position,
+                ctrl_jnt.pos,
                 # not a right formulation, just for test
-                err_limit=ctrl_jnt.lim_vel * 1e-2,
+                err_limit=ctrl_jnt.lim_vel * 3e-3,
             )
             tau_cmds = ARM_KP_DEFAULT * (
-                mid_pos - cur_jnt.position) - ARM_KD_DEFAULT * (
-                    ctrl_jnt.vel - cur_jnt.velocity) + self.__cur_comp
+                mid_pos - cur_jnt.position) + ARM_KD_DEFAULT * (
+                    ctrl_jnt.vel -
+                    cur_jnt.velocity) + ctrl_jnt.eff + self.__cur_comp
 
         elif mode == HexDcRoboArmCtrlMode.EE:
             ik_success, tar_pos = self.__dyn_util.inverse_kinematics_analytic(
@@ -305,14 +313,15 @@ class MujocoSim:
                 self.__arm_limits[:, 0, 1],
             )
             mid_pos = interp_joint(
-                ctrl_jnt.pos,
                 cur_jnt.position,
+                ctrl_jnt.pos,
                 # not a right formulation, just for test
-                err_limit=ctrl_jnt.lim_vel * 1e-2,
+                err_limit=ctrl_jnt.lim_vel * 3e-3,
             )
             tau_cmds = ARM_KP_DEFAULT * (
-                mid_pos - cur_jnt.position) - ARM_KD_DEFAULT * (
-                    ctrl_jnt.vel - cur_jnt.velocity) + self.__cur_comp
+                mid_pos - cur_jnt.position) + ARM_KD_DEFAULT * (
+                    ctrl_jnt.vel -
+                    cur_jnt.velocity) + ctrl_jnt.eff + self.__cur_comp
 
         else:
             raise ValueError(f"Unsupported arm control mode: {mode}")
@@ -335,6 +344,11 @@ class MujocoSim:
                     ctrl_jnt.vel - cur_jnt.velocity) + ctrl_jnt.eff
 
         elif mode == int(HexDcRoboGripCtrlMode.JNT):
+            tar_pos = grip_pos_limit(
+                ctrl_jnt.pos,
+                self.__grip_limits[:, 0, 0],
+                self.__grip_limits[:, 0, 1],
+            )
             tau_abs = np.fabs(ctrl_jnt.eff)
             kd = tau_abs / ctrl_jnt.lim_vel
             pos_err = tar_pos - cur_jnt.position

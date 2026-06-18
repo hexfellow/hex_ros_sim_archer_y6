@@ -16,7 +16,9 @@ import rclpy.node
 from builtin_interfaces.msg import Time
 from sensor_msgs.msg import JointState
 from rosgraph_msgs.msg import Clock
+from geometry_msgs.msg import Pose
 from hex_ros_msgs.msg import (
+    HexRosJnt,
     HexRosRoboManipStateStamped,
     HexRosRoboManipCtrlStamped,
 )
@@ -233,37 +235,8 @@ class DataInterface(InterfaceBase):
         self._manip_ctrl_deque.append(self.__manip_ctrl_msg_to_dc(msg))
 
     @staticmethod
-    def __jnt_to_dc(jnt) -> HexDcBaseJntFull:
-        return HexDcBaseJntFull(
-            pos=np.asarray(jnt.pos, dtype=np.float64),
-            vel=np.asarray(jnt.vel, dtype=np.float64),
-            eff=np.asarray(jnt.eff, dtype=np.float64),
-            kp=np.asarray(jnt.kp, dtype=np.float64),
-            kd=np.asarray(jnt.kd, dtype=np.float64),
-            lim_vel=np.asarray(jnt.lim_vel, dtype=np.float64),
-            lim_acc=np.asarray(jnt.lim_acc, dtype=np.float64),
-        )
-
-    @staticmethod
-    def __pose_to_dc(pose) -> HexDcBasePose:
-        return HexDcBasePose(
-            position=HexDcBaseVector3(
-                x=pose.position.x,
-                y=pose.position.y,
-                z=pose.position.z,
-            ),
-            orientation=HexDcBaseQuaternion(
-                x=pose.orientation.x,
-                y=pose.orientation.y,
-                z=pose.orientation.z,
-                w=pose.orientation.w,
-            ),
-        )
-
     def __manip_ctrl_msg_to_dc(
-        self,
-        msg: HexRosRoboManipCtrlStamped,
-    ) -> HexDcRoboManipCtrlStamped:
+            msg: HexRosRoboManipCtrlStamped) -> HexDcRoboManipCtrlStamped:
         header = HexDcBaseHeader(
             stamp=HexDcBaseTime(
                 secs=int(msg.header.stamp.sec),
@@ -280,14 +253,14 @@ class DataInterface(InterfaceBase):
                 y=arm_msg.grav.y,
                 z=arm_msg.grav.z,
             ),
-            jnt=self.__jnt_to_dc(arm_msg.jnt),
-            pose=self.__pose_to_dc(arm_msg.pose),
+            jnt=DataInterface.__jnt_to_dc(arm_msg.jnt),
+            pose=DataInterface.__pose_to_dc(arm_msg.pose),
         )
 
         grip_msg = msg.manip_ctrl.grip_ctrl
         grip_ctrl = HexDcRoboGripCtrl(
             ctrl_mode=HexDcRoboGripCtrlMode(int(grip_msg.ctrl_mode)),
-            jnt=self.__jnt_to_dc(grip_msg.jnt),
+            jnt=DataInterface.__jnt_to_dc(grip_msg.jnt),
         )
 
         return HexDcRoboManipCtrlStamped(
@@ -295,5 +268,33 @@ class DataInterface(InterfaceBase):
             manip_ctrl=HexDcRoboManipCtrl(
                 arm_ctrl=arm_ctrl,
                 grip_ctrl=grip_ctrl,
+            ),
+        )
+
+    @staticmethod
+    def __jnt_to_dc(jnt: HexRosJnt) -> HexDcBaseJntFull:
+        return HexDcBaseJntFull(
+            pos=np.asarray(jnt.pos, dtype=np.float64),
+            vel=np.asarray(jnt.vel, dtype=np.float64),
+            eff=np.asarray(jnt.eff, dtype=np.float64),
+            kp=np.asarray(jnt.kp, dtype=np.float64),
+            kd=np.asarray(jnt.kd, dtype=np.float64),
+            lim_vel=np.asarray(jnt.lim_vel, dtype=np.float64),
+            lim_acc=np.asarray(jnt.lim_acc, dtype=np.float64),
+        )
+
+    @staticmethod
+    def __pose_to_dc(pose: Pose) -> HexDcBasePose:
+        return HexDcBasePose(
+            position=HexDcBaseVector3(
+                x=pose.position.x,
+                y=pose.position.y,
+                z=pose.position.z,
+            ),
+            orientation=HexDcBaseQuaternion(
+                x=pose.orientation.x,
+                y=pose.orientation.y,
+                z=pose.orientation.z,
+                w=pose.orientation.w,
             ),
         )
