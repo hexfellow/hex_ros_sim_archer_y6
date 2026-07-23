@@ -30,7 +30,7 @@ from hex_util_msg.dataclass.dataclass_robo import (
     HexDcRoboManipStateStamped,
     HexDcRoboManipCtrlStamped,
 )
-from hex_util_ros import HexDynUtilY6
+from hex_util_ros import HexDynUtilY6, HexFricUtil
 from hex_util_ros import arm_pos_limit, grip_pos_limit, interp_joint
 
 # Default gains used when only a position target is given (JNT mode).
@@ -78,6 +78,12 @@ class MujocoSim:
             model_path=self.__model_urdf,
             last_link="link_6",
             pose_end_in_flange=np.array([0.187, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]),
+        )
+        self.__fric_util = HexFricUtil(
+            fc=np.array([0.28] * 4 + [0.05] * 2),
+            fv=np.array([0.04] * 4 + [0.0015] * 2),
+            fo=np.array([0.0] * 6),
+            k=np.array([100.0] * 6),
         )
 
         # cur
@@ -186,7 +192,7 @@ class MujocoSim:
         self.__cur_comp = self.__dyn_util.compensation(
             self.__data.qpos[self.__idx_dict["arm"]],
             self.__data.qvel[self.__idx_dict["arm"]],
-        )
+        ) + self.__fric_util(self.__data.qvel[self.__idx_dict["arm"]])
 
         # viewer init
         mujoco.mj_forward(self.__model, self.__data)
@@ -231,7 +237,7 @@ class MujocoSim:
         self.__cur_comp = self.__dyn_util.compensation(
             self.__cur_state["arm"].position,
             self.__cur_state["arm"].velocity,
-        )
+        ) + self.__fric_util(self.__cur_state["arm"].velocity)
 
     def sync_viewer(self) -> None:
         if self.__viewer is not None:
