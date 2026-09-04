@@ -71,8 +71,7 @@ class SimArcherY6:
                 state_count = 0
                 manip_state = self.__sim.get_manip_state()
                 self.__data_interface.pub_manip_state(manip_state)
-                if self.__prog_param["rviz"]:
-                    self.__data_interface.pub_joint_state(manip_state)
+                self.__data_interface.pub_joint_state(manip_state)
 
             # 4. render viewer at ~60 hz
             if self.__prog_param["viewer"]:
